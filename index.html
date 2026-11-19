@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bank DApp | Sepolia</title>
+<style>
+:root{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#eaf1ff;background:#091322}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,#1d3d70,transparent 42%),#091322;min-height:100vh}.wrap{max-width:940px;margin:auto;padding:35px 18px}.header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.logo{font-size:25px;font-weight:800}.pill{padding:9px 13px;border-radius:30px;background:#1c3151;color:#c8dfff;font-size:13px}.intro{margin:42px 0 28px}.intro h1{font-size:clamp(30px,6vw,47px);margin:0 0 8px}.muted{color:#a7b9d4}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:#121f34;border:1px solid #2d4361;border-radius:18px;padding:23px;box-shadow:0 12px 30px #0002}.wide{grid-column:1/-1}h2{font-size:19px;margin:0 0 17px}button{border:0;border-radius:10px;background:#4789ff;color:white;font:inherit;font-weight:700;padding:12px 17px;cursor:pointer}button:hover{filter:brightness(1.13)}button:disabled{opacity:.5;cursor:wait}.secondary{background:#30435e}.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}input{width:100%;border:1px solid #3d587b;background:#0a1628;color:white;border-radius:10px;padding:13px;font:inherit}label{display:block;color:#c0cde0;font-size:13px;margin:12px 0 8px}.big{font-size:36px;font-weight:800;margin:12px 0}.mono{font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}.small{font-size:13px}.status{padding:15px;margin-top:18px;background:#1a304f;border:1px solid #365779;border-radius:12px;overflow-wrap:anywhere}.status.error{background:#4b2028;border-color:#8b3b48}.status.ok{background:#163d32;border-color:#2c765a}a{color:#a2c6ff}footer{text-align:center;color:#8a9eb9;margin:24px 0;font-size:13px}@media(max-width:680px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="header"><div class="logo">🏦 Bank DApp</div><span class="pill">Ethereum Sepolia Testnet</span></div>
+<div class="intro"><h1>ธนาคารบน Blockchain</h1><p class="muted">ฝาก ถอน และตรวจสอบยอดเงินด้วย MetaMask และ Infura</p></div>
+<div class="grid">
+<section class="card wide"><div class="row"><h2>เชื่อมต่อ MetaMask</h2><button id="connect">Connect Wallet</button></div><p class="muted small">Wallet Address</p><div id="address" class="mono">ยังไม่ได้เชื่อมต่อ</div><p class="muted small">Network: <span id="network">—</span></p></section>
+<section class="card"><h2>ยอดเงินใน Smart Contract</h2><p class="muted small">Bank Balance</p><div class="big"><span id="balance">—</span> <span style="font-size:16px">ETH</span></div><p class="muted small">Wallet Balance: <span id="walletBalance">—</span> ETH</p><button class="secondary" id="refresh">Check Balance</button></section>
+<section class="card"><h2>ฝากเงิน (Deposit)</h2><label for="depositAmount">จำนวน Sepolia ETH</label><input id="depositAmount" type="text" inputmode="decimal" placeholder="0.01"><div class="actions"><button id="deposit">Deposit</button></div></section>
+<section class="card"><h2>ถอนเงิน (Withdraw)</h2><label for="withdrawAmount">จำนวน Sepolia ETH</label><input id="withdrawAmount" type="text" inputmode="decimal" placeholder="0.005"><div class="actions"><button id="withdraw">Withdraw</button></div></section>
+<section class="card"><h2>Infura RPC</h2><label for="infuraKey">Infura Project ID (ไม่ใช่ Secret)</label><input id="infuraKey" type="text" autocomplete="off" spellcheck="false" placeholder="กรอก Infura Project ID"><div class="actions"><button id="infura" class="secondary">Connect Infura</button></div><p class="muted small">ใช้ Infura อ่านข้อมูล Blockchain; ต้องจำกัด Project ID ตามโดเมนและเครือข่ายก่อนเผยแพร่ ห้ามใส่ API Secret</p></section>
+<section class="card wide"><h2>ข้อมูลนักศึกษา</h2><p>รหัสนักศึกษา: <strong>66073169</strong><br>ชื่อ-สกุล: <strong>นนท์ธีร์ ปานะถึก</strong></p><p class="muted small">Bank Contract: <a class="mono" href="https://sepolia.etherscan.io/address/0x29e26A3f1D3E0d50AA1b88c12cC4daa5E6fb0c2a#code" target="_blank" rel="noopener">0x29e26A3f1D3E0d50AA1b88c12cC4daa5E6fb0c2a</a></p></section>
+</div><div class="status" id="status" role="status" aria-live="polite">พร้อมใช้งาน • กรุณาเชื่อม MetaMask และ Infura</div><footer>Assignment 5 • Sepolia Testnet Only • ใช้ ETH ทดสอบเท่านั้น</footer>
+</main>
+<script type="module">
+import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.16.0/+esm';
+const CONTRACT_ADDRESS='0x29e26A3f1D3E0d50AA1b88c12cC4daa5E6fb0c2a';
+const ABI=['function deposit() payable','function withdraw(uint256 amount)','function checkBlance() view returns (uint256)'];
+const CHAIN_ID=11155111n;
+const $=id=>document.getElementById(id);
+let provider=null,signer=null,account=null,infuraProvider=null;
+function notify(message,type=''){ $('status').textContent=message;$('status').className='status '+type; }
+function errorMessage(err){return err?.shortMessage||err?.reason||err?.info?.error?.message||err?.message||String(err)}
+async function ensureWallet(){if(!window.ethereum)throw Error('ไม่พบ MetaMask กรุณาติดตั้งส่วนขยาย MetaMask');if(!provider)provider=new ethers.BrowserProvider(window.ethereum);let net=await provider.getNetwork();if(net.chainId!==CHAIN_ID)throw Error('กรุณาเปลี่ยน MetaMask เป็น Sepolia Testnet');if(!account){await provider.send('eth_requestAccounts',[]);signer=await provider.getSigner();account=await signer.getAddress()}return signer}
+function amount(id){const v=$(id).value.trim();if(!/^\d+(\.\d+)?$/.test(v))throw Error('กรุณากรอกจำนวน ETH ที่ถูกต้อง');const wei=ethers.parseEther(v);if(wei<=0n)throw Error('จำนวน ETH ต้องมากกว่า 0');return wei}
+async function refresh(){await ensureWallet();const readProvider=infuraProvider||provider;const bank=new ethers.Contract(CONTRACT_ADDRESS,ABI,provider.getSigner?signer:readProvider);const [bankBalance,walletBalance]=await Promise.all([bank.checkBlance(),readProvider.getBalance(account)]);$('balance').textContent=ethers.formatEther(bankBalance);$('walletBalance').textContent=Number(ethers.formatEther(walletBalance)).toFixed(6);$('address').textContent=account;$('network').textContent='Sepolia'}
+async function run(fn){try{notify('กำลังดำเนินการ...');await fn();notify('ดำเนินการสำเร็จ','ok')}catch(e){notify(errorMessage(e),'error')}}
+$('connect').onclick=()=>run(async()=>{await ensureWallet();await refresh()});
+$('refresh').onclick=()=>run(refresh);
+$('infura').onclick=async()=>{try{const key=$('infuraKey').value.trim();if(!/^[a-zA-Z0-9_-]{16,128}$/.test(key))throw Error('กรุณากรอก Infura Project ID ที่ถูกต้อง');const rpc=new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/'+encodeURIComponent(key),11155111);const block=await rpc.getBlockNumber();infuraProvider=rpc;notify('เชื่อม Infura สำเร็จ • Block #'+block,'ok')}catch(e){notify(errorMessage(e),'error')}};
+for(const [btn,id,method] of [['deposit','depositAmount','deposit'],['withdraw','withdrawAmount','withdraw']]){$(btn).onclick=async()=>{try{const wei=amount(id);await ensureWallet();const bank=new ethers.Contract(CONTRACT_ADDRESS,ABI,signer);notify('กรุณายืนยันธุรกรรมใน MetaMask');const tx=method==='deposit'?await bank.deposit({value:wei}):await bank.withdraw(wei);notify('ส่งธุรกรรมแล้ว: '+tx.hash+' • กำลังรอยืนยัน');await tx.wait();await refresh();$(id).value='';notify('ธุรกรรมสำเร็จ: '+tx.hash,'ok')}catch(e){notify(errorMessage(e),'error')}}}
+if(window.ethereum){window.ethereum.on?.('accountsChanged',()=>{provider=null;signer=null;account=null;$('balance').textContent='—';$('walletBalance').textContent='—';$('address').textContent='ยังไม่ได้เชื่อมต่อ';notify('บัญชีเปลี่ยน กรุณาเชื่อม MetaMask อีกครั้ง')});window.ethereum.on?.('chainChanged',()=>location.reload())}
+</script></body></html>
